@@ -10,6 +10,7 @@ const musicSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    category: [{ type: mongoose.Schema.Types.ObjectId, ref: "Category" }],
     url: {
       type: String,
       required: true,
@@ -22,4 +23,4 @@ const musicSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-export default mongoose.model("Music", musicSchema);
+export const Music = mongoose.model("Music", musicSchema);
