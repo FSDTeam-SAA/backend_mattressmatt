@@ -8,11 +8,17 @@ import { sendEmail } from "../utils/sendEmail.js";
 import { User } from "./../model/user.model.js";
 
 export const register = catchAsync(async (req, res) => {
-  const { name, email, password, phone, username, role, address } = req.body;
-  const { id } = req.query;
+  const { name, email, phone, password, confirmPassword } = req.body;
 
   if (!email || !password) {
     throw new AppError(httpStatus.FORBIDDEN, "Please fill in all fields");
+  }
+
+  if (password !== confirmPassword) {
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      "Password and confirm password do not match"
+    );
   }
   const checkUser = await User.findOne({ email: email });
   if (checkUser)
@@ -20,27 +26,26 @@ export const register = catchAsync(async (req, res) => {
       httpStatus.BAD_REQUEST,
       "Email already exists, please try another email"
     );
-  const otp = generateOTP();
-  const jwtPayloadOTP = {
-    otp: otp,
-  };
 
-  const otptoken = createToken(
-    jwtPayloadOTP,
-    process.env.OTP_SECRET,
-    process.env.OTP_EXPIRE
-  );
-  const generatedUsername = username || email.split("@")[0];
+  // const otp = generateOTP();
+  // const jwtPayloadOTP = {
+  //   otp: otp,
+  // };
+
+  // const otptoken = createToken(
+  //   jwtPayloadOTP,
+  //   process.env.OTP_SECRET,
+  //   process.env.OTP_EXPIRE
+  // );
 
   const user = await User.create({
     name,
     email,
     password,
     phone,
-    username: generatedUsername,
     verificationInfo: { token: "", verified: true },
-    address,
   });
+
   // await sendEmail(user.email, "Registerd Account", `Your OTP is ${otp}`);
   // create token and sent to the client
 
@@ -70,7 +75,7 @@ export const register = catchAsync(async (req, res) => {
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: "User Logged in successfully",
+    message: "User registered successfully",
     data: userObj,
   });
 });
