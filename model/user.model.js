@@ -1,14 +1,8 @@
 import mongoose, { Schema, Document, Model } from "mongoose";
 import bcrypt from "bcryptjs";
-import crypto from "crypto";
 
 const userSchema = new Schema(
   {
-    uniqueId: {
-      type: String,
-      unique: true,
-      default: () => crypto.randomInt(1000, 9999).toString(),
-    },
     name: { type: String },
     email: { type: String, required: true, unique: true },
     password: { type: String, select: 0, required: true },
@@ -17,8 +11,8 @@ const userSchema = new Schema(
     credit: { type: Number, default: null },
     role: {
       type: String,
-      default: "student",
-      enum: ["trainer", "student", "admin"],
+      default: "user",
+      enum: ["user", "admin"],
     },
     stripeAccountId: { type: String, default: "" },
     isStripeOnboarded: { type: Boolean, default: false },
@@ -40,38 +34,6 @@ const userSchema = new Schema(
     password_reset_token: { type: String, default: "" },
     fine: { type: Number, default: 0 },
     refreshToken: { type: String, default: "" },
-    userRating: {
-      competence: {
-        star: {
-          type: Number,
-          default: 5,
-        },
-        comment: {
-          type: String,
-          default: "",
-        },
-      },
-      punctuality: {
-        star: {
-          type: Number,
-          default: 5,
-        },
-        comment: {
-          type: String,
-          default: "",
-        },
-      },
-      behavior: {
-        star: {
-          type: Number,
-          default: 5,
-        },
-        comment: {
-          type: String,
-          default: "",
-        },
-      },
-    },
   },
   { timestamps: true }
 );
