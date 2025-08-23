@@ -83,12 +83,28 @@ export const getAllCategoriesWithMusic = catchAsync(async (req, res) => {
 export const allMusic = catchAsync(async (req, res) => {
   const music = await Music.find()
     .populate("category", "name")
-    .sort({ createdAt: -1 });
+    .sort({ createdAt: -1 })
+    .limit(10);
 
   sendResponse(res, {
     statusCode: 200,
     success: true,
     message: "All music fetched successfully",
+    data: music,
+  });
+});
+
+// Most played  music
+export const mostPlayedMusic = catchAsync(async (req, res) => {
+  const music = await Music.find()
+    .populate("category", "name")
+    .sort({ playCount: -1 })
+    .limit(10);
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Most played music fetched successfully",
     data: music,
   });
 });
