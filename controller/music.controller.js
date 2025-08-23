@@ -49,7 +49,9 @@ export const getMusicByCategory = catchAsync(async (req, res) => {
   const { category } = req.params;
 
   const query = category ? { category } : {};
-  const music = await Music.find(query).populate("category", "name");
+  const music = await Music.find(query)
+    .populate("category", "name")
+    .sort({ createdAt: -1 });
 
   if (!music.length) {
     throw new AppError(404, "No music found");
@@ -65,13 +67,29 @@ export const getMusicByCategory = catchAsync(async (req, res) => {
 
 // get all category with music
 export const getAllCategoriesWithMusic = catchAsync(async (req, res) => {
-  const categories = await Category.find().populate("music", "title artist");
+  const categories = await Category.find()
+    .populate("music", "title artist")
+    .sort({ createdAt: -1 });
 
   sendResponse(res, {
     statusCode: 200,
     success: true,
     message: "All categories with music fetched successfully",
     data: categories,
+  });
+});
+
+// Get all music
+export const allMusic = catchAsync(async (req, res) => {
+  const music = await Music.find()
+    .populate("category", "name")
+    .sort({ createdAt: -1 });
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "All music fetched successfully",
+    data: music,
   });
 });
 

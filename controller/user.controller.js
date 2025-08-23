@@ -24,31 +24,26 @@ export const getProfile = catchAsync(async (req, res) => {
   });
 });
 
-// Update user profile
+// Update profile
 export const updateProfile = catchAsync(async (req, res) => {
-  const { name, username, phone, street, city, state, zipCode } = req.body;
+  const { name, phone, gender, dob } = req.body;
+
+  // Find user
   const user = await User.findById(req.user._id);
   if (!user) {
     throw new AppError(httpStatus.NOT_FOUND, "User not found");
   }
 
-  // Update fields that are included in the request body
+  // Update only provided fields
   if (name) user.name = name;
-  if (username) user.username = username;
   if (phone) user.phone = phone;
-  if (street) user.address.street = street;
-  if (city) user.address.city = city;
-  if (state) user.address.state = state;
-  if (zipCode) user.address.zipCode = zipCode;
+  if (gender) user.gender = gender;
+  if (dob) user.dob = dob;
 
-  // If avatar file is uploaded, process it
   if (req.file) {
-    const result = await uploadOnCloudinary(req.file.buffer, {
-      folder: "avatars",
-    });
     user.avatar = {
-      public_id: result.public_id,
-      url: result.secure_url,
+      public_id: req.file.filename,
+      url: `/public/temp/${req.file.filename}`,
     };
   }
 
@@ -92,106 +87,6 @@ export const changePassword = catchAsync(async (req, res) => {
     success: true,
     message: "Password changed successfully",
     data: user,
-  });
-});
-
-// get all students with pagination by query
-export const getAllStudents = catchAsync(async (req, res) => {
-  const { page = 1, limit = 10 } = req.query;
-  const skip = (page - 1) * limit;
-  const students = await User.find({ role: "student" })
-    .select("-password -refreshToken -verificationInfo -password_reset_token")
-    .skip(skip)
-    .limit(limit);
-
-  sendResponse(res, {
-    statusCode: httpStatus.OK,
-    success: true,
-    message: "Students fetched successfully",
-    data: students,
-  });
-});
-
-export const addTrainerFromAdmin = catchAsync(async (req, res) => {
-  const { name, email, password } = req.body;
-
-  if (!name || !email || !password) {
-    throw new AppError(
-      httpStatus.BAD_REQUEST,
-      "Name, email and password are required"
-    );
-  }
-
-  const existingUser = await User.findOne({ email });
-  if (existingUser) {
-    throw new AppError(
-      httpStatus.CONFLICT,
-      "User with this email already exists"
-    );
-  }
-
-  const generatedUsername = `${name
-    .replace(/\s+/g, "")
-    .toLowerCase()}${Math.floor(1000 + Math.random() * 9000)}`;
-
-  const newTrainer = await User.create({
-    name,
-    email,
-    password,
-    username: generatedUsername,
-    role: "trainer",
-    verificationInfo: {
-      verified: true,
-      token: "",
-    },
-  });
-
-  sendResponse(res, {
-    statusCode: httpStatus.CREATED,
-    success: true,
-    message: "Trainer added successfully",
-    data: {
-      _id: newTrainer._id,
-      name: newTrainer.name,
-      email: newTrainer.email,
-      username: newTrainer.username,
-      role: newTrainer.role,
-      verified: newTrainer.verificationInfo.verified,
-    },
-  });
-});
-
-export const getAllTrainer = catchAsync(async (req, res) => {
-  const trainers = await User.find({ role: "trainer" })
-    .populate("courses")
-    .select("-password -refreshToken -verificationInfo -password_reset_token");
-
-  if (!trainers || trainers.length === 0) {
-    throw new AppError(httpStatus.NOT_FOUND, "No trainers found");
-  }
-
-  sendResponse(res, {
-    statusCode: httpStatus.OK,
-    success: true,
-    message: "Trainers fetched successfully",
-    data: trainers,
-  });
-});
-
-export const deleteTrainer = catchAsync(async (req, res) => {
-  const trainerId = req.params.id;
-
-  const deletedTrainer = await User.findByIdAndDelete(trainerId);
-
-  if (!deletedTrainer) {
-    throw new AppError(httpStatus.NOT_FOUND, "Trainer not found");
-  }
-
-  sendResponse(res, {
-    statusCode: httpStatus.OK,
-    success: true,
-    message: "Trainer deleted successfully",
-    data: deletedTrainer,
   });
 });
 
