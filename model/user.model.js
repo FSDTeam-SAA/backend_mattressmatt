@@ -9,6 +9,11 @@ const userSchema = new Schema(
     username: { type: String, required: true, unique: true },
     phone: { type: String },
     credit: { type: Number, default: null },
+    dob: { type: Date },
+    gender: {
+      type: String,
+      enum: ["male", "female", "other"],
+    },
     role: {
       type: String,
       default: "user",
