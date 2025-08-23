@@ -17,13 +17,29 @@ const alarmSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    wakeUpPhase: {
+      type: Number,
+      default: 5,
+    },
     music: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Music",
-      default: null,
+      type: {
+        type: String,
+        default: "default",
+        enum: ["default", "media", "app"],
+        required: true,
+      },
+      id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Music",
+        default: null,
+      },
+      location: {
+        type: String,
+        default: null,
+      },
     },
   },
   { timestamps: true }
 );
 
-export default mongoose.model("Alarm", alarmSchema);
+export const Alarm = mongoose.model("Alarm", alarmSchema);
