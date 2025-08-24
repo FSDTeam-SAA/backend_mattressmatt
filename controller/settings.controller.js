@@ -18,7 +18,9 @@ export const addUpdatePrivacyPolicy = catchAsync(async (req, res) => {
     { new: true, upsert: true, setDefaultsOnInsert: true }
   );
 
-  sendResponse(res, 200, {
+  sendResponse(res, {
+    statusCode: 200,
+    status: true,
     message: "Privacy policy updated successfully",
     data: privacyPolicy,
   });
@@ -28,7 +30,9 @@ export const addUpdatePrivacyPolicy = catchAsync(async (req, res) => {
 export const getPrivacyPolicy = catchAsync(async (req, res) => {
   const privacyPolicy = await PrivacyPolicy.findOne({});
 
-  sendResponse(res, 200, {
+  sendResponse(res, {
+    statusCode: 200,
+    status: true,
     message: "Privacy policy retrieved successfully",
     data: privacyPolicy,
   });
@@ -48,7 +52,9 @@ export const addUpdateTermsCondition = catchAsync(async (req, res) => {
     { new: true, upsert: true, setDefaultsOnInsert: true }
   );
 
-  sendResponse(res, 200, {
+  sendResponse(res, {
+    statusCode: 200,
+    status: true,
     message: "Terms and conditions updated successfully",
     data: termsCondition,
   });
@@ -58,7 +64,9 @@ export const addUpdateTermsCondition = catchAsync(async (req, res) => {
 export const getTermsCondition = catchAsync(async (req, res) => {
   const termsCondition = await Terms.findOne({});
 
-  sendResponse(res, 200, {
+  sendResponse(res, {
+    statusCode: 200,
+    status: true,
     message: "Terms and conditions retrieved successfully",
     data: termsCondition,
   });
