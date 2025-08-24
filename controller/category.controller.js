@@ -24,6 +24,7 @@ export const getCategories = catchAsync(async (req, res) => {
   sendResponse(res, {
     statusCode: 200,
     success: true,
+    message: "Categories fetched successfully",
     data: categories,
   });
 });

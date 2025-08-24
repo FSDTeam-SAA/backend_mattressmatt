@@ -14,7 +14,9 @@ export const createAlarm = catchAsync(async (req, res) => {
     music,
   });
 
-  sendResponse(res, 201, {
+  sendResponse(res, {
+    statusCode: 201,
+    status: true,
     message: "Alarm created successfully",
     data: alarm,
   });
@@ -52,7 +54,9 @@ export const updateAlarm = catchAsync(async (req, res) => {
 
   if (!alarm) throw new AppError("Alarm not found or unauthorized", 404);
 
-  sendResponse(res, 200, {
+  sendResponse(res, {
+    statusCode: 200,
+    status: true,
     message: "Alarm updated successfully",
     data: alarm,
   });
@@ -79,7 +83,9 @@ export const toggleAlarm = catchAsync(async (req, res) => {
   alarm.enabled = !alarm.enabled;
   await alarm.save();
 
-  sendResponse(res, 200, {
+  sendResponse(res, {
+    statusCode: 200,
+    status: true,
     message: `Alarm ${alarm.enabled ? "enabled" : "disabled"} successfully`,
     data: alarm,
   });
@@ -101,7 +107,9 @@ export const updateWakeUpPhase = catchAsync(async (req, res) => {
 
   if (!alarm) throw new AppError("Alarm not found or unauthorized", 404);
 
-  sendResponse(res, 200, {
+  sendResponse(res, {
+    statusCode: 200,
+    status: true,
     message: "Wake up phase updated successfully",
     data: alarm,
   });
