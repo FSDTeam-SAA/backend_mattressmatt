@@ -10,11 +10,7 @@ import { Category } from "../model/category.model.js";
 export const uploadMusic = catchAsync(async (req, res) => {
   const { title, artist, category } = req.body;
 
-  const fileUrl = `/temp/${req.files.audioFile[0].filename}`;
-
-  const thumbnailUrl = req.files.thumbnail
-    ? `/temp/${req.files.thumbnail[0].filename}`
-    : null;
+  const fileUrl = `/temp/${req.file.filename}`;
 
   if (!category) {
     throw new AppError(400, "Category is required");
@@ -30,7 +26,6 @@ export const uploadMusic = catchAsync(async (req, res) => {
     artist,
     category,
     url: fileUrl,
-    thumbnail: thumbnailUrl,
   });
   await music.save();
 
@@ -42,40 +37,6 @@ export const uploadMusic = catchAsync(async (req, res) => {
     success: true,
     message: "Music uploaded successfully",
     data: music,
-  });
-});
-
-export const getMusicByCategory = catchAsync(async (req, res) => {
-  const { category } = req.params;
-
-  const query = category ? { category } : {};
-  const music = await Music.find(query)
-    .populate("category", "name")
-    .sort({ createdAt: -1 });
-
-  if (!music.length) {
-    throw new AppError(404, "No music found");
-  }
-
-  sendResponse(res, {
-    statusCode: 200,
-    success: true,
-    message: "Music fetched successfully",
-    data: music,
-  });
-});
-
-// get all category with music
-export const getAllCategoriesWithMusic = catchAsync(async (req, res) => {
-  const categories = await Category.find()
-    .populate("music", "title artist")
-    .sort({ createdAt: -1 });
-
-  sendResponse(res, {
-    statusCode: 200,
-    success: true,
-    message: "All categories with music fetched successfully",
-    data: categories,
   });
 });
 
@@ -105,6 +66,25 @@ export const mostPlayedMusic = catchAsync(async (req, res) => {
     statusCode: 200,
     success: true,
     message: "Most played music fetched successfully",
+    data: music,
+  });
+});
+
+export const getCategorywiseMusic = catchAsync(async (req, res) => {
+  const { categoryId } = req.params;
+
+  const music = await Music.find({ category: categoryId })
+    .populate("category", "name")
+    .sort({ createdAt: -1 });
+
+  if (!music.length) {
+    throw new AppError(404, "No music found for this category");
+  }
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Category-wise music fetched successfully",
     data: music,
   });
 });

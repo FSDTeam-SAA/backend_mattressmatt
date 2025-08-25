@@ -8,10 +8,10 @@ import {
   toggleAlarm,
   updateWakeUpPhase,
 } from "../controller/alarm.controller.js";
+import { protect } from "../middleware/auth.middleware.js";
 
 const router = express.Router();
-
-router.use(authMiddleware);
+router.use(protect);
 
 router.post("/", createAlarm);
 router.get("/", getUserAlarms);

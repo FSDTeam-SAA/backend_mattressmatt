@@ -15,11 +15,11 @@ export const createSleepGoal = catchAsync(async (req, res) => {
   }
 
   let alarmToneData = {
-    type: alarmTone || "default",
+    type: alarmTone?.type || "default",
     id: null,
     location: null,
   };
-  if (alarmTone === "default") {
+  if (alarmTone?.type === "default") {
     const defaultTone = await Music.findOne({ isDefault: true });
     if (defaultTone) alarmToneData.id = defaultTone._id;
   } else if (alarmTone === "media" && req.file) {
@@ -34,11 +34,20 @@ export const createSleepGoal = catchAsync(async (req, res) => {
     duration: parseInt(duration),
     bedtime: new Date(bedtime),
     wakeUpTime: new Date(wakeUpTime),
-    days: days ? days.split(",") : [],
+    days: Array.isArray(days)
+      ? days
+      : typeof days === "string"
+      ? days.split(",")
+      : [],
     alarmTone: alarmToneData,
     customToneUrl:
       alarmTone === "media" && req.file ? `/temp/${req.file.filename}` : null,
-    reminders: reminders
+    reminders: Array.isArray(reminders)
+      ? reminders.map((r) => ({
+          time: new Date(r.time),
+          enabled: r.enabled,
+        }))
+      : typeof reminders === "string"
       ? JSON.parse(reminders).map((r) => ({
           time: new Date(r.time),
           enabled: r.enabled,
@@ -83,6 +92,7 @@ export const updateSleepGoal = catchAsync(async (req, res) => {
   const { id } = req.params;
   const { duration, bedtime, wakeUpTime, days, alarmTone, reminders, musicId } =
     req.body;
+
   const userId = req.user?._id;
 
   if (!userId) {
@@ -90,16 +100,16 @@ export const updateSleepGoal = catchAsync(async (req, res) => {
   }
 
   let alarmToneData = {};
-  if (req.body.alarmTone) {
-    alarmToneData.type = alarmTone;
-    if (alarmTone === "default") {
+  if (req.body.alarmTone?.type) {
+    alarmToneData.type = alarmTone?.type;
+    if (alarmTone?.type === "default") {
       const defaultTone = await Music.findOne({ isDefault: true });
       if (defaultTone) alarmToneData.id = defaultTone._id;
       alarmToneData.location = null;
-    } else if (alarmTone === "media" && req.file) {
+    } else if (alarmTone?.type === "media" && req.file) {
       alarmToneData.location = `/temp/${req.file.filename}`;
       alarmToneData.id = null;
-    } else if (alarmTone === "app" && musicId) {
+    } else if (alarmTone?.type === "app" && musicId) {
       const music = await Music.findById(musicId);
       if (music) alarmToneData.id = music._id;
       alarmToneData.location = null;
@@ -112,13 +122,22 @@ export const updateSleepGoal = catchAsync(async (req, res) => {
       duration: parseInt(duration),
       bedtime: new Date(bedtime),
       wakeUpTime: new Date(wakeUpTime),
-      days: days ? days.split(",") : [],
+      days: Array.isArray(days)
+        ? days
+        : typeof days === "string"
+        ? days.split(",")
+        : [],
       alarmTone: alarmToneData.type ? alarmToneData : undefined,
       customToneUrl:
         alarmTone === "media" && req.file
           ? `/temp/${req.file.filename}`
           : undefined,
-      reminders: reminders
+      reminders: Array.isArray(reminders)
+        ? reminders.map((r) => ({
+            time: new Date(r.time),
+            enabled: r.enabled,
+          }))
+        : typeof reminders === "string"
         ? JSON.parse(reminders).map((r) => ({
             time: new Date(r.time),
             enabled: r.enabled,
