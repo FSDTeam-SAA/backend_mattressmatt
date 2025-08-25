@@ -8,6 +8,7 @@ import sleepGoalRoute from "../route/sleepGoal.route.js";
 import settingsRoute from "../route/settings.route.js";
 import photoAnalyzeRoute from "../route/photoAnalysis.route.js";
 import alermRoute from "../route/alram.route.js"
+import sleepNoteRoute from "../route/sleepNote.route.js"
 
 const router = express.Router();
 
@@ -20,5 +21,6 @@ router.use("/sleep", sleepGoalRoute);
 router.use("/photo-analyze", photoAnalyzeRoute);
 router.use("/settings", settingsRoute);
 router.use("/alarm", alermRoute);
+router.use("/sleep-note", sleepNoteRoute);
 
 export default router;
