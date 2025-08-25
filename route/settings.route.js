@@ -9,9 +9,9 @@ import {
 
 const router = express.Router();
 
-router.post("/privacy-policy", addUpdatePrivacyPolicy);
+router.patch("/privacy-policy", addUpdatePrivacyPolicy);
 router.get("/privacy-policy", getPrivacyPolicy);
-router.post("/terms-condition", addUpdateTermsCondition);
+router.patch("/terms-condition", addUpdateTermsCondition);
 router.get("/terms-condition", getTermsCondition);
 
 export default router;
