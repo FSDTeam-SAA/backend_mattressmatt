@@ -2,19 +2,18 @@ import express from "express";
 
 import {
   uploadMusic,
-  getAllCategoriesWithMusic,
   allMusic,
-  getMusicByCategory,
   mostPlayedMusic,
   deleteMusic,
+  getCategorywiseMusic,
 } from "../controller/music.controller.js";
+import upload from "../middleware/multer.middleware.js";
 
 const router = express.Router();
 
-router.post("/", uploadMusic);
+router.post("/", upload.single("audioFile"), uploadMusic);
 router.get("/", allMusic);
-router.get("/categoryWiseImages", getAllCategoriesWithMusic);
-router.get("/:category", getMusicByCategory);
+router.get("/categoryWiseMusic/:categoryId", getCategorywiseMusic);
 router.get("/mostPlayed", mostPlayedMusic);
 router.delete("/:id", deleteMusic);
 

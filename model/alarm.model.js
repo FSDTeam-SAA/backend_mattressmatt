@@ -26,7 +26,6 @@ const alarmSchema = new mongoose.Schema(
         type: String,
         default: "default",
         enum: ["default", "media", "app"],
-        required: true,
       },
       id: {
         type: mongoose.Schema.Types.ObjectId,

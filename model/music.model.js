@@ -10,14 +10,10 @@ const musicSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    category: [{ type: mongoose.Schema.Types.ObjectId, ref: "Category" }],
+    category: { type: mongoose.Schema.Types.ObjectId, ref: "Category" },
     url: {
       type: String,
       required: true,
-    },
-    thumbnail: {
-      type: String,
-      default: null,
     },
     isDefault: {
       type: Boolean,
