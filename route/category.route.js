@@ -6,12 +6,13 @@ import {
   updateCategory,
   deleteCategory,
 } from "../controller/category.controller.js";
+import upload from "../middleware/multer.middleware.js";
 
 const router = express.Router();
 
-router.post("/", createCategory);
+router.post("/", upload.single("thumbnail"), createCategory);
 router.get("/", getCategories);
-router.patch("/:id", updateCategory);
+router.patch("/:id", upload.single("thumbnail"), updateCategory);
 router.delete("/:id", deleteCategory);
 
 export default router;

@@ -7,7 +7,16 @@ import { Music } from "../model/music.model.js";
 export const createCategory = catchAsync(async (req, res) => {
   const { name } = req.body;
 
-  const category = new Category({ name });
+  // upload thumbnail in diskstorage not cloudinary
+  let thumbnail;
+  if (req.file) {
+    thumbnail = {
+      public_id: req.file.filename,
+      url: `/public/temp/${req.file.filename}`,
+    };
+  }
+
+  const category = new Category({ name, thumbnail });
   await category.save();
 
   sendResponse(res, {
@@ -33,9 +42,17 @@ export const updateCategory = catchAsync(async (req, res) => {
   const { id } = req.params;
   const { name } = req.body;
 
+  let thumbnail;
+  if (req.file) {
+    thumbnail = {
+      public_id: req.file.filename,
+      url: `/public/temp/${req.file.filename}`,
+    };
+  }
+
   const category = await Category.findByIdAndUpdate(
     id,
-    { name },
+    { name, thumbnail },
     { new: true, runValidators: true }
   );
 
