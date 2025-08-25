@@ -6,6 +6,7 @@ import categoryRoute from "../route/category.route.js";
 import musicRoute from "../route/music.controller.js";
 import sleepGoalRoute from "../route/sleepGoal.route.js";
 import settingsRoute from "../route/settings.route.js";
+import photoAnalyzeRoute from "../route/photoAnalysis.route.js";
 
 const router = express.Router();
 
@@ -15,6 +16,7 @@ router.use("/user", userRoute);
 router.use("/category", categoryRoute);
 router.use("/music", musicRoute);
 router.use("/sleep", sleepGoalRoute);
+router.use("/photo-analyze", photoAnalyzeRoute);
 router.use("/settings", settingsRoute);
 
 export default router;
