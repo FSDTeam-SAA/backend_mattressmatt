@@ -10,8 +10,8 @@ const categorySchema = new mongoose.Schema(
       default: 0,
     },
     thumbnail: {
-      type: String,
-      default: null,
+      public_id: { type: String, default: null },
+      url: { type: String, default: null },
     },
   },
   { timestamps: true }
