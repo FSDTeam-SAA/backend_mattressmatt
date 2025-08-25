@@ -1,11 +1,8 @@
 import httpStatus from "http-status";
 import { User } from "../model/user.model.js";
-import { uploadOnCloudinary } from "../utils/commonMethod.js";
 import AppError from "../errors/AppError.js";
 import sendResponse from "../utils/sendResponse.js";
 import catchAsync from "../utils/catchAsync.js";
-import { inviteLinkTemplate, sendEmail } from "../utils/sendEmail.js";
-import catchAsync from "./../utils/catchAsync";
 
 // Get user profile
 export const getProfile = catchAsync(async (req, res) => {

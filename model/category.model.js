@@ -1,5 +1,4 @@
 import mongoose from "mongoose";
-import { Chat } from "./chat.modal";
 
 const categorySchema = new mongoose.Schema(
   {
