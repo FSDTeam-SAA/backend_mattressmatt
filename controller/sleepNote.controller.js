@@ -1,7 +1,7 @@
 import AppError from "../errors/AppError.js";
-import SleepNote from "../model/sleepNote.model.js";
 import catchAsync from "../utils/catchAsync.js";
 import sendResponse from "../utils/sendResponse.js";
+import { SleepNote } from './../model/sleepNote.model.js';
 
 
 
