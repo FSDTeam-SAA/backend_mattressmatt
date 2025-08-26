@@ -1,4 +1,4 @@
-const { Schema, model } = require("mongoose");
+import  { Schema, model } from "mongoose";
 
 const sleepNoteModel = new Schema({
   text: {
@@ -11,5 +11,4 @@ const sleepNoteModel = new Schema({
   }
 });
 
-const SleepNote = model("SleepNote", sleepNoteModel);
-module.exports = SleepNote;
+export const SleepNote = model("SleepNote", sleepNoteModel);
