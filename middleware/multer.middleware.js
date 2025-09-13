@@ -25,4 +25,6 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
+// Middleware to handle file upload
+
 export default upload;
