@@ -22,9 +22,9 @@ export const createSleepGoal = catchAsync(async (req, res) => {
   if (alarmTone?.type === "default") {
     const defaultTone = await Music.findOne({ isDefault: true });
     if (defaultTone) alarmToneData.id = defaultTone._id;
-  } else if (alarmTone === "media" && req.file) {
+  } else if (alarmTone.type === "media" && req.file) {
     alarmToneData.location = `/temp/${req.file.filename}`;
-  } else if (alarmTone === "app" && req.body.musicId) {
+  } else if (alarmTone.type === "app" && req.body.musicId) {
     const music = await Music.findById(req.body.musicId);
     if (music) alarmToneData.id = music._id;
   }
