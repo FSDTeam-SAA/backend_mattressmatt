@@ -3,6 +3,8 @@ import { User } from "../model/user.model.js";
 import AppError from "../errors/AppError.js";
 import sendResponse from "../utils/sendResponse.js";
 import catchAsync from "../utils/catchAsync.js";
+import { Music } from "../model/music.model.js";
+import { Alarm } from "../model/alarm.model.js";
 
 // Get user profile
 export const getProfile = catchAsync(async (req, res) => {
@@ -486,3 +488,71 @@ export const getAllUser = catchAsync(async (req, res) => {
 //     data: user.userRating,
 //     });
 // });
+
+
+
+export const getDashboardStats = catchAsync(
+  async (req, res, next) => {
+    // Total users
+    const totalUsers = await User.countDocuments();
+
+    // Music tracks
+    const totalTracks = await Music.countDocuments();
+
+    // Total plays → assume each alarm that has a music assigned = play count
+    const totalPlaysAgg = await Alarm.aggregate([
+      { $match: { "music.id": { $ne: null } } },
+      { $count: "totalPlays" },
+    ]);
+    const totalPlays = totalPlaysAgg.length > 0 ? totalPlaysAgg[0].totalPlays : 0;
+
+    // Average rating → if you have a Review model, replace with real logic
+    const avgRating = 4.5; // placeholder
+    const reviewsCount = 1234; // placeholder
+
+    // User activity in last 7 days
+    const today = new Date();
+    const lastWeek = new Date();
+    lastWeek.setDate(today.getDate() - 6);
+
+    const userActivity = await User.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: lastWeek },
+        },
+      },
+      {
+        $group: {
+          _id: {
+            $dateToString: { format: "%Y-%m-%d", date: "$createdAt" },
+          },
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]);
+
+    // Most played music (mock since plays not tracked properly)
+    const mostPlayed = await Music.find().limit(5).lean();
+
+    // Recently added music
+    const recentMusic = await Music.find().sort({ createdAt: -1 }).limit(5).lean();
+
+    // Final response
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: "Dashboard data fetched successfully",
+      data: {
+        totalUsers,
+        totalTracks,
+        totalPlays,
+        avgRating,
+        reviewsCount,
+        userActivity,
+        mostPlayed,
+        recentMusic,
+      },
+    });
+  }
+);
