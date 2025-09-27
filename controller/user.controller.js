@@ -87,6 +87,17 @@ export const changePassword = catchAsync(async (req, res) => {
   });
 });
 
+// Get all user
+export const getAllUser = catchAsync(async (req, res) => {
+  const users = await User.find();
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Users fetched successfully",
+    data: users,
+  });
+});
+
 // export const getUserWiseOrderStatusSummary = catchAsync(
 //   async (req, res) => {
 //  const summary = await Order.aggregate([
