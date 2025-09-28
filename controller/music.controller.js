@@ -5,6 +5,7 @@ import fs from "fs";
 import path from "path";
 import { Music } from "../model/music.model.js";
 import { Category } from "../model/category.model.js";
+import { User } from "../model/user.model.js";
 
 // Upload music with category
 export const uploadMusic = catchAsync(async (req, res) => {
@@ -67,6 +68,54 @@ export const mostPlayedMusic = catchAsync(async (req, res) => {
     success: true,
     message: "Most played music fetched successfully",
     data: music,
+  });
+});
+
+// Overview Controller
+export const getOverview = catchAsync(async (req, res) => {
+  const totalUsers = await User.countDocuments();
+  const totalTracks = await Music.countDocuments();
+
+  const totalPlaysAgg = await Music.aggregate([
+    { $group: { _id: null, total: { $sum: "$playCount" } } },
+  ]);
+  const totalPlays = totalPlaysAgg[0]?.total || 0;
+
+  const today = new Date();
+  const last7Days = [...Array(7)].map((_, i) => {
+    const d = new Date();
+    d.setDate(today.getDate() - (6 - i));
+    return d;
+  });
+
+  const userActivity = await Promise.all(
+    last7Days.map(async (date) => {
+      const start = new Date(date.setHours(0, 0, 0, 0));
+      const end = new Date(date.setHours(23, 59, 59, 999));
+
+      const count = await User.countDocuments({
+        createdAt: { $gte: start, $lte: end },
+      });
+
+      return {
+        day: start.toLocaleDateString("en-US", { weekday: "short" }),
+        count,
+      };
+    })
+  );
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Dashboard overview fetched successfully",
+    data: {
+      counts: {
+        totalUsers,
+        totalTracks,
+        totalPlays,
+      },
+      graph: userActivity,
+    },
   });
 });
 
