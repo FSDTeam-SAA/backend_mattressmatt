@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-//  photoAnalysis.js (Full, Fixed Version – Height & Weight Approx Included)
+//  photoAnalysis.js (with Chest Circumference Estimation)
 // ─────────────────────────────────────────────────────────────────────────────
 
 import * as faceapi from "face-api.js";
@@ -13,6 +13,8 @@ const AVG_SHOULDER_WIDTH_CM = 40;
 const AVG_FACE_WIDTH_CM = 14;
 const SHOULDER_FACE_MULT = 2.2;
 const NECK_FACE_MULT = 3.0;
+const CHEST_SHOULDER_MULT_MALE = 2.7;
+const CHEST_SHOULDER_MULT_FEMALE = 2.5;
 
 // ── HELPERS ────────────────────────────────────────────────────────────────
 const dist = (a, b) => Math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2);
@@ -203,7 +205,6 @@ export const photoAnalysis = catchAsync(async (req, res) => {
     .withFaceLandmarks()
     .withAgeAndGender();
 
-  // ── Run pose analysis (height + weight)
   let poseResult = null;
   try {
     poseResult = await runPoseAnalysis(req.file.path);
@@ -224,11 +225,9 @@ export const photoAnalysis = catchAsync(async (req, res) => {
   for (const det of faceDetections) {
     const { age, gender, genderProbability, landmarks } = det;
 
-    // Height & Weight (fallback logic)
     let heightCm = heightCmInput ?? poseResult?.heightCm ?? null;
     let weightKg = weightKgInput ?? poseResult?.weightKg ?? null;
 
-    // If still missing, infer approximate height range based on face ratio
     if (!heightCm && pxPerCm) {
       const facePx = faceWidthPxFromLandmarks(landmarks);
       if (facePx) heightCm = +(cmFromPx(facePx, pxPerCm) * 8.5).toFixed(1);
@@ -238,7 +237,6 @@ export const photoAnalysis = catchAsync(async (req, res) => {
       weightKg = +(estBmi * Math.pow(heightCm / 100, 2)).toFixed(1);
     }
 
-    // Shoulder
     let shoulderWidthCm = shoulderWidthInput ?? poseResult?.shoulderWidthCm ?? null;
     if (!shoulderWidthCm && landmarks && pxPerCm) {
       const L = landmarks.positions[2];
@@ -249,7 +247,6 @@ export const photoAnalysis = catchAsync(async (req, res) => {
       }
     }
 
-    // Neck
     let neckCircumferenceCm = neckCircumferenceInput ?? null;
     if (!neckCircumferenceCm && landmarks && pxPerCm) {
       const left = landmarks.positions[3];
@@ -260,7 +257,20 @@ export const photoAnalysis = catchAsync(async (req, res) => {
       }
     }
 
-    // BMI
+    // 🆕 Chest Circumference Estimation
+    let chestCircumferenceCm = null;
+    if (shoulderWidthCm) {
+      const mult = gender === "male" ? CHEST_SHOULDER_MULT_MALE : CHEST_SHOULDER_MULT_FEMALE;
+      chestCircumferenceCm = +(shoulderWidthCm * mult).toFixed(1);
+    } else if (landmarks && pxPerCm) {
+      // fallback from face width
+      const fw = faceWidthPxFromLandmarks(landmarks);
+      if (fw) {
+        const faceCm = cmFromPx(fw, pxPerCm);
+        chestCircumferenceCm = +(faceCm * 7.5).toFixed(1); // fallback ratio
+      }
+    }
+
     const bmiValue = bmi(weightKg, heightCm);
     const bmiClass = classifyBMI(bmiValue);
 
@@ -278,6 +288,7 @@ export const photoAnalysis = catchAsync(async (req, res) => {
         weightKg,
         shoulderWidthCm,
         neckCircumferenceCm,
+        chestCircumferenceCm,
         notes:
           !referenceWidthCm && !pxPerCmInput && !poseResult
             ? "Measurements are approximate; provide pxPerCm or a reference object for accuracy."
