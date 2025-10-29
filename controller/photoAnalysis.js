@@ -42,6 +42,7 @@ import sendResponse from '../utils/sendResponse.js';
 
 import { FilesetResolver, PoseLandmarker } from "@mediapipe/tasks-vision";
 import { createCanvas, loadImage } from "canvas";
+import c from 'config';
 
 // --- Anthropometric constants (average adult) ---
 const AVG_SHOULDER_WIDTH_CM = 40; // cm, biacromial breadth
@@ -253,7 +254,9 @@ function recommendMattress({ sleepPosition, bmiClass }) {
 // ---- main handler ----
 
 export const photoAnalysis = catchAsync(async (req, res) => {
+  console.log("Photo analysis called");
   const { Canvas, Image, ImageData } = canvas;
+  console.log(req.file);
   faceapi.env.monkeyPatch({ Canvas, Image, ImageData });
 
   // Optional user/context inputs
