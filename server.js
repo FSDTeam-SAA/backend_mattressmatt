@@ -67,7 +67,7 @@ io.on("connection", (socket) => {
   });
 });
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 8001;
 server.listen(PORT, async () => {
   console.log(`Server is running on port ${PORT}`);
 
