@@ -177,10 +177,6 @@ export const photoAnalysis = catchAsync(async (req, res) => {
     sleepPosition = "back",
   } = req.body || {};
 
-  await faceapi.nets.ssdMobilenetv1.loadFromDisk("./models");
-  await faceapi.nets.ageGenderNet.loadFromDisk("./models");
-  await faceapi.nets.faceLandmark68Net.loadFromDisk("./models");
-
   const img = await canvas.loadImage(req.file.path);
   const faceDetections = await faceapi
     .detectAllFaces(img)
