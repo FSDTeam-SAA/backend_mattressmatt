@@ -166,9 +166,6 @@ export const photoAnalysis = catchAsync(async (req, res) => {
     return res.status(400).json({ success: false, message: "No image uploaded." });
   }
 
-  const { Canvas, Image, ImageData } = canvas;
-  faceapi.env.monkeyPatch({ Canvas, Image, ImageData });
-
   const {
     pxPerCm: pxPerCmInput,
     referenceWidthCm,

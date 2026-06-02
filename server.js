@@ -7,6 +7,8 @@ import router from "./mainroute/index.js";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import webhookRoutes from "./route/stripe.webhook.route.js";
+import * as faceapi from "face-api.js";
+import canvas from "canvas";
 
 import globalErrorHandler from "./middleware/globalErrorHandler.js";
 import notFound from "./middleware/notFound.js";
@@ -77,5 +79,17 @@ server.listen(PORT, async () => {
   } catch (err) {
     console.error("MongoDB connection error:", err);
     process.exit(1);
+  }
+
+  // Load face-api models ONCE at startup (not on every request)
+  try {
+    const { Canvas, Image, ImageData } = canvas;
+    faceapi.env.monkeyPatch({ Canvas, Image, ImageData });
+    await faceapi.nets.ssdMobilenetv1.loadFromDisk("./models");
+    await faceapi.nets.ageGenderNet.loadFromDisk("./models");
+    await faceapi.nets.faceLandmark68Net.loadFromDisk("./models");
+    console.log("Face-api models loaded successfully");
+  } catch (err) {
+    console.error("Face-api model loading failed:", err);
   }
 });
