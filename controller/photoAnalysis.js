@@ -3,8 +3,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import * as faceapi from "face-api.js";
-import canvas, { createCanvas, loadImage } from "canvas";
-import { FilesetResolver, PoseLandmarker } from "@mediapipe/tasks-vision";
+import canvas from "canvas";
 import catchAsync from "../utils/catchAsync.js";
 import sendResponse from "../utils/sendResponse.js";
 
@@ -56,51 +55,33 @@ function classifyBMI(b) {
   return "obese";
 }
 
-// ── POSE ANALYSIS (MediaPipe) ───────────────────────────────────────────────
-async function runPoseAnalysis(imagePath) {
-  const vision = await FilesetResolver.forVisionTasks(
-    "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
-  );
-  const landmarker = await PoseLandmarker.createFromOptions(vision, {
-    baseOptions: {
-      modelAssetPath:
-        "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/latest/pose_landmarker_full.task",
-    },
-    runningMode: "IMAGE",
-  });
+// ── POSE ANALYSIS — face-api only (no CDN dependency) ──────────────────────
+async function runPoseAnalysis(landmarks, imgWidth, imgHeight) {
+  try {
+    if (!landmarks) return null;
 
-  const img = await loadImage(imagePath);
-  const c = createCanvas(img.width, img.height);
-  const ctx = c.getContext("2d");
-  ctx.drawImage(img, 0, 0, img.width, img.height);
+    const shoulderL = landmarks.positions[3];
+    const shoulderR = landmarks.positions[13];
+    if (!shoulderL || !shoulderR) return null;
 
-  const detections = await landmarker.detect(c);
-  if (!detections.landmarks?.length) return null;
+    const shoulderPxWidth = dist(shoulderL, shoulderR) * 2.8;
+    if (shoulderPxWidth <= 0) return null;
 
-  const lms = detections.landmarks[0];
-  const headTop = lms[0];
-  const ankleL = lms[29];
-  const ankleR = lms[30];
-  const shoulderL = lms[11];
-  const shoulderR = lms[12];
+    const pxPerCm = shoulderPxWidth / AVG_SHOULDER_WIDTH_CM;
+    const estimatedHeightPx = imgHeight * 0.85;
+    const heightCm = +(estimatedHeightPx / pxPerCm).toFixed(1);
+    const shoulderWidthCm = +(shoulderPxWidth / pxPerCm).toFixed(1);
 
-  if (!headTop || !ankleL || !ankleR || !shoulderL || !shoulderR) return null;
+    const frameRatio = shoulderWidthCm / heightCm;
+    let bmiGuess = 22;
+    if (frameRatio > 0.28) bmiGuess = 25;
+    if (frameRatio < 0.23) bmiGuess = 20;
+    const weightKg = +(bmiGuess * Math.pow(heightCm / 100, 2)).toFixed(1);
 
-  const ankleMid = { x: (ankleL.x + ankleR.x) / 2, y: (ankleL.y + ankleR.y) / 2 };
-  const bodyPxHeight = dist(headTop, ankleMid) * img.height;
-  const shoulderPxWidth = dist(shoulderL, shoulderR) * img.height;
-
-  const pxPerCm = shoulderPxWidth / AVG_SHOULDER_WIDTH_CM;
-  const heightCm = +(bodyPxHeight / pxPerCm).toFixed(1);
-  const shoulderWidthCm = +(shoulderPxWidth / pxPerCm).toFixed(1);
-
-  const frameRatio = shoulderWidthCm / heightCm;
-  let bmiGuess = 22;
-  if (frameRatio > 0.28) bmiGuess = 25;
-  if (frameRatio < 0.23) bmiGuess = 20;
-  const weightKg = +(bmiGuess * Math.pow(heightCm / 100, 2)).toFixed(1);
-
-  return { heightCm, weightKg, shoulderWidthCm, pxPerCm, source: "pose_landmarks" };
+    return { heightCm, weightKg, shoulderWidthCm, pxPerCm, source: "face_landmarks_estimate" };
+  } catch {
+    return null;
+  }
 }
 
 // ── FACE LANDMARK HELPERS ───────────────────────────────────────────────────
@@ -181,9 +162,11 @@ function recommendMattress({ sleepPosition, bmiClass }) {
 
 // ── MAIN HANDLER ───────────────────────────────────────────────────────────
 export const photoAnalysis = catchAsync(async (req, res) => {
-  console.log("Photo analysis called");
+  if (!req.file) {
+    return res.status(400).json({ success: false, message: "No image uploaded." });
+  }
+
   const { Canvas, Image, ImageData } = canvas;
-  console.log(req.file);
   faceapi.env.monkeyPatch({ Canvas, Image, ImageData });
 
   const {
@@ -207,11 +190,19 @@ export const photoAnalysis = catchAsync(async (req, res) => {
     .withFaceLandmarks()
     .withAgeAndGender();
 
+  if (!faceDetections.length) {
+    return res.status(200).json({
+      success: false,
+      message: "No face detected in the image. Please use a clear front-facing photo.",
+      data: [],
+    });
+  }
+
   let poseResult = null;
   try {
-    poseResult = await runPoseAnalysis(req.file.path);
+    poseResult = await runPoseAnalysis(faceDetections[0].landmarks, img.width, img.height);
   } catch (e) {
-    console.warn("Pose analysis failed:", e);
+    // pose analysis is optional, continue without it
   }
 
   const scaleInfo = computePxPerCm({ pxPerCm: pxPerCmInput, referenceWidthCm, referenceWidthPx });
